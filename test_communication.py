@@ -16,7 +16,7 @@ class TestMailSender(MailSender):
     def __init__(self):
         self.__count_send_mail_called = 0
 
-    def send(self):
+    def send_mail(self, schedule):
         self.__count_send_mail_called += 1
 
     def get_count_send_mail_called(self):
