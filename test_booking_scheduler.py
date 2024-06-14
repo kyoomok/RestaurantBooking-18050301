@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import unittest
+from unittest.mock import Mock, patch
 
 from booking_scheduler import BookingScheduler
 from schedule import Customer, Schedule
@@ -9,6 +10,13 @@ CAPACITY_PER_HOUR = 3
 UNDER_CAPACITY = 1
 OVER_CAPACITY = 4
 
+NOT_ON_THE_HOUR = datetime.strptime("2024/06/14 11:20", "%Y/%m/%d %H:%M")
+ON_THE_HOUR = datetime.strptime("2024/06/14 11:00", "%Y/%m/%d %H:%M")
+
+CUSTOMER = Mock()
+CUSTOMER.get_email.return_value = None
+CUSTOMER_WITH_MAIL = Mock()
+CUSTOMER_WITH_MAIL.get_email.return_value = "abcd@naver.com"
 
 class TestableBookingScheduler(BookingScheduler):
     def __init__(self, capacity_per_hour, datetime):
@@ -17,7 +25,6 @@ class TestableBookingScheduler(BookingScheduler):
 
     def get_now(self):
         return datetime.strptime(self._date_time, "%Y/%m/%d %H:%M")
-
 
 
 class TestBookingScheduler(unittest.TestCase):
@@ -94,13 +101,6 @@ class TestBookingScheduler(unittest.TestCase):
 
         self.assertEqual(True, self.booking_scheduler.has_schedule(schedule))
 
-
-NOT_ON_THE_HOUR = datetime.strptime("2024/06/14 11:20", "%Y/%m/%d %H:%M")
-ON_THE_HOUR = datetime.strptime("2024/06/14 11:00", "%Y/%m/%d %H:%M")
-
-CUSTOMER = Customer(name="no_name", phone_number="010-1234-1111")
-
-CUSTOMER_WITH_MAIL = Customer("no_name", "010-1234-1111", "abcd@naver.com")
 
 if __name__ == '__main__':
     unittest.main()
