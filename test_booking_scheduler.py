@@ -5,7 +5,6 @@ from unittest.mock import Mock, patch
 from booking_scheduler import BookingScheduler
 from schedule import Customer, Schedule
 
-
 CAPACITY_PER_HOUR = 3
 UNDER_CAPACITY = 1
 OVER_CAPACITY = 4
@@ -17,15 +16,6 @@ CUSTOMER = Mock()
 CUSTOMER.get_email.return_value = None
 CUSTOMER_WITH_MAIL = Mock()
 CUSTOMER_WITH_MAIL.get_email.return_value = "abcd@naver.com"
-
-
-class TestableBookingScheduler(BookingScheduler):
-    def __init__(self, capacity_per_hour, datetime):
-        super().__init__(capacity_per_hour)
-        self._date_time = datetime
-
-    def get_now(self):
-        return datetime.strptime(self._date_time, "%Y/%m/%d %H:%M")
 
 
 class TestBookingScheduler(unittest.TestCase):
@@ -87,15 +77,17 @@ class TestBookingScheduler(unittest.TestCase):
 
         self.mail_sender.send_mail.assert_called_once()
 
-    def test_현재날짜가_일요일인_경우_예약불가_예외처리(self):
-        self.booking_scheduler = TestableBookingScheduler(CAPACITY_PER_HOUR, "2024/06/09 11:00")
+    @patch.object(BookingScheduler, 'get_now', return_value=datetime.strptime("2024/06/09 11:00", "%Y/%m/%d %H:%M"))
+    def test_현재날짜가_일요일인_경우_예약불가_예외처리(self, mock):
+        self.booking_scheduler = BookingScheduler(CAPACITY_PER_HOUR)
         schedule = Schedule(ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER_WITH_MAIL)
         with self.assertRaises(ValueError) as context:
             self.booking_scheduler.add_schedule(schedule)
         self.assertEqual("Booking system is not available on Sunday", str(context.exception))
 
-    def test_현재날짜가_일요일이_아닌경우_예약가능(self):
-        self.booking_scheduler = TestableBookingScheduler(CAPACITY_PER_HOUR, "2024/06/10 11:00")
+    @patch.object(BookingScheduler, 'get_now', return_value=datetime.strptime("2024/06/10 11:00", "%Y/%m/%d %H:%M"))
+    def test_현재날짜가_일요일이_아닌경우_예약가능(self, mock):
+        self.booking_scheduler = BookingScheduler(CAPACITY_PER_HOUR)
         schedule = Schedule(ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER_WITH_MAIL)
 
         self.booking_scheduler.add_schedule(schedule)
