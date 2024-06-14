@@ -9,11 +9,21 @@ CAPACITY_PER_HOUR = 3
 UNDER_CAPACITY = 1
 OVER_CAPACITY = 4
 
-NOT_ON_THE_HOUR = datetime.strptime("2024/06/14 11:20", "%Y/%m/%d %H:%M")
-ON_THE_HOUR = datetime.strptime("2024/06/14 11:00", "%Y/%m/%d %H:%M")
-CUSTOMER = Customer(name="no_name", phone_number="010-1234-1111")
-CUSTOMER_WITH_MAIL = Customer("no_name", "010-1234-1111", "abcd@naver.com")
 
+class SundayBookingScheduler(BookingScheduler):
+    def __init__(self, capacity_per_hour):
+        super().__init__(capacity_per_hour)
+
+    def get_now(self):
+        return datetime.strptime("2024/06/09 11:00", "%Y/%m/%d %H:%M")
+
+
+class MondayBookingScheduler(BookingScheduler):
+    def __init__(self, capacity_per_hour):
+        super().__init__(capacity_per_hour)
+
+    def get_now(self):
+        return datetime.strptime("2024/06/10 11:00", "%Y/%m/%d %H:%M")
 
 class TestBookingScheduler(unittest.TestCase):
     def setUp(self):
@@ -75,11 +85,26 @@ class TestBookingScheduler(unittest.TestCase):
         self.assertEqual(1, self.test_mail_sender.get_count_send_mail_called())
 
     def test_현재날짜가_일요일인_경우_예약불가_예외처리(self):
-        pass
+        self.booking_scheduler = SundayBookingScheduler(CAPACITY_PER_HOUR)
+        schedule = Schedule(ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER_WITH_MAIL)
+        with self.assertRaises(ValueError) as context:
+            self.booking_scheduler.add_schedule(schedule)
+        self.assertEqual("Booking system is not available on Sunday", str(context.exception))
 
     def test_현재날짜가_일요일이_아닌경우_예약가능(self):
-        pass
+        self.booking_scheduler = MondayBookingScheduler(CAPACITY_PER_HOUR)
+        schedule = Schedule(ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER_WITH_MAIL)
+        self.booking_scheduler.add_schedule(schedule)
 
+        self.assertEqual(True, self.booking_scheduler.has_schedule(schedule))
+
+
+NOT_ON_THE_HOUR = datetime.strptime("2024/06/14 11:20", "%Y/%m/%d %H:%M")
+ON_THE_HOUR = datetime.strptime("2024/06/14 11:00", "%Y/%m/%d %H:%M")
+
+CUSTOMER = Customer(name="no_name", phone_number="010-1234-1111")
+
+CUSTOMER_WITH_MAIL = Customer("no_name", "010-1234-1111", "abcd@naver.com")
 
 if __name__ == '__main__':
     unittest.main()
