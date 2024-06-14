@@ -10,20 +10,15 @@ UNDER_CAPACITY = 1
 OVER_CAPACITY = 4
 
 
-class SundayBookingScheduler(BookingScheduler):
-    def __init__(self, capacity_per_hour):
+class TestableBookingScheduler(BookingScheduler):
+    def __init__(self, capacity_per_hour, datetime):
         super().__init__(capacity_per_hour)
+        self._date_time = datetime
 
     def get_now(self):
-        return datetime.strptime("2024/06/09 11:00", "%Y/%m/%d %H:%M")
+        return datetime.strptime(self._date_time, "%Y/%m/%d %H:%M")
 
 
-class MondayBookingScheduler(BookingScheduler):
-    def __init__(self, capacity_per_hour):
-        super().__init__(capacity_per_hour)
-
-    def get_now(self):
-        return datetime.strptime("2024/06/10 11:00", "%Y/%m/%d %H:%M")
 
 class TestBookingScheduler(unittest.TestCase):
     def setUp(self):
@@ -85,15 +80,16 @@ class TestBookingScheduler(unittest.TestCase):
         self.assertEqual(1, self.test_mail_sender.get_count_send_mail_called())
 
     def test_현재날짜가_일요일인_경우_예약불가_예외처리(self):
-        self.booking_scheduler = SundayBookingScheduler(CAPACITY_PER_HOUR)
+        self.booking_scheduler = TestableBookingScheduler(CAPACITY_PER_HOUR, "2024/06/09 11:00")
         schedule = Schedule(ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER_WITH_MAIL)
         with self.assertRaises(ValueError) as context:
             self.booking_scheduler.add_schedule(schedule)
         self.assertEqual("Booking system is not available on Sunday", str(context.exception))
 
     def test_현재날짜가_일요일이_아닌경우_예약가능(self):
-        self.booking_scheduler = MondayBookingScheduler(CAPACITY_PER_HOUR)
+        self.booking_scheduler = TestableBookingScheduler(CAPACITY_PER_HOUR, "2024/06/10 11:00")
         schedule = Schedule(ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER_WITH_MAIL)
+
         self.booking_scheduler.add_schedule(schedule)
 
         self.assertEqual(True, self.booking_scheduler.has_schedule(schedule))
