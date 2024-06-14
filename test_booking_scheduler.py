@@ -3,7 +3,7 @@ import unittest
 
 from booking_scheduler import BookingScheduler
 from schedule import Customer, Schedule
-from test_communication import TestSmsSender
+from test_communication import TestSmsSender, TestMailSender
 
 CAPACITY_PER_HOUR = 3
 UNDER_CAPACITY = 1
@@ -60,7 +60,13 @@ class TestBookingScheduler(unittest.TestCase):
         self.assertEqual(True, self.test_sms_sender.is_send_method_called())
 
     def test_이메일이_없는_경우에는_이메일_미발송(self):
-        pass
+        test_mail_sender = TestMailSender()
+
+        schedule = Schedule(ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER)
+        self.booking_scheduler.set_mail_sender(test_mail_sender)
+        self.booking_scheduler.add_schedule(schedule)
+
+        self.assertEqual(0, test_mail_sender.get_count_send_mail_called())
 
     def test_이메일이_있는_경우에는_이메일_발송(self):
         pass
